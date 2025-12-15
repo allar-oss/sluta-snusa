@@ -30,7 +30,7 @@ const GAME_DOC_ID = "sluta-snusa";     // games/sluta-snusa
 const ALLAR_PHONE = "+46700000000";    // byt till ditt nummer
 const TOTAL_DAYS = 60;
 
-// Dag 1 blir öppen direkt (om du vill ha fast datum: new Date("2025-01-01"))
+// Dag 1 blir öppen direkt
 const startDate = new Date();
 
 const backgrounds = ["images/bg1.jpg","images/bg2.jpg","images/bg3.jpg","images/bg4.jpg"];
@@ -92,7 +92,6 @@ function confettiBurst(intensity = "normal") {
 }
 
 /* ===== Streak ===== */
-// Streak = antal dagar i rad från dag 1: [1,2,3,5] => 3
 function computeStreak(openedDaysArr) {
   const set = new Set(openedDaysArr || []);
   let streak = 0;
@@ -120,7 +119,7 @@ const BADGES = [
    6) INIT
 ========================= */
 async function init() {
-  // ----- Rendera kalender direkt -----
+  // ----- Rendera kalender först -----
   const calendar = $(".calendar");
   if (!calendar) return;
 
@@ -132,6 +131,13 @@ async function init() {
     tile.textContent = String(i);
     if (isLocked(i)) tile.classList.add("locked");
     calendar.appendChild(tile);
+  }
+
+  // Status helper (måste finnas innan auth snapshot)
+  const statusLineEl = document.getElementById("statusLine");
+  function setStatus(msg){
+    console.log(msg);
+    if(statusLineEl) statusLineEl.textContent = msg;
   }
 
   // ----- Background slideshow -----
@@ -147,10 +153,38 @@ async function init() {
   let who = localStorage.getItem("who"); // "bitti" | "mattias"
   const whoChosen = $("#whoChosen");
 
+  // gameState/currentDay måste finnas innan setWho använder dem
+  let gameState = null;
+  let currentDay = null;
+
+  // anti-spam mega-confetti per dag
+  const fired = new Set();
+
+  function markDoneDays(gs){
+    try{
+      const whoLocal = localStorage.getItem("who");
+      if (!whoLocal) return;
+
+      const openedDays = gs?.participants?.[whoLocal]?.openedDays;
+      if (!Array.isArray(openedDays)) return;
+
+      const opened = new Set(openedDays);
+
+      document.querySelectorAll(".day").forEach(dayEl => {
+        const n = Number(dayEl.dataset.day);
+        dayEl.classList.toggle("done", opened.has(n));
+      });
+    }catch(e){
+      console.error("markDoneDays failed:", e);
+    }
+  }
+
   function setWho(v) {
     who = v;
     localStorage.setItem("who", v);
     if (whoChosen) whoChosen.textContent = `✅ ${v === "bitti" ? "Bitti" : "Mattias"}`;
+    // direkt visuellt uppdatera "done"
+    markDoneDays(gameState);
     if (currentDay) updateStatusLine(currentDay);
   }
 
@@ -186,29 +220,15 @@ async function init() {
   const auth = getAuth(app);
   const db = getFirestore(app);
 
- try {
-  const cred = await signInAnonymously(auth);
-  setStatus("Auth OK: " + cred.user.uid);
-} catch (e) {
-  console.error("Anonymous auth failed:", e);
-  setStatus("Auth FEL: " + (e.code || e.message));
-}
-
+  try {
+    const cred = await signInAnonymously(auth);
+    setStatus("Auth OK: " + cred.user.uid);
+  } catch (e) {
+    console.error("Anonymous auth failed:", e);
+    setStatus("Auth FEL: " + (e.code || e.message));
+  }
 
   const gameRef = doc(db, "games", GAME_DOC_ID);
-
-  const statusLine = document.getElementById("statusLine");
-function setStatus(msg){
-  console.log(msg);
-  if(statusLine) statusLine.textContent = msg;
-}
-
-  // ----- State -----
-  let gameState = null;
-  let currentDay = null;
-
-  // anti-spam mega-confetti per dag
-  const fired = new Set();
 
   function getParticipant(p) {
     return gameState?.participants?.[p] ?? null;
@@ -279,7 +299,6 @@ function setStatus(msg){
     const bDays = (getParticipant("bitti")?.openedDays || []).length;
     const mDays = (getParticipant("mattias")?.openedDays || []).length;
 
-    // TEAM-badges: upplåst om någon av dem nått nivån
     const teamDays = Math.max(bDays, mDays);
 
     wrap.innerHTML = "";
@@ -312,6 +331,7 @@ function setStatus(msg){
         challengeDoneBtn.disabled = true;
         challengeDoneBtn.textContent = "⭐ Jag klarade utmaningen";
       }
+      if (callBtn) callBtn.classList.add("hidden");
       return;
     }
 
@@ -324,7 +344,6 @@ function setStatus(msg){
       `Dag ${day} — Öppnad: Bitti ${bOpened ? "✅" : "⏳"} | Mattias ${mOpened ? "✅" : "⏳"} • ` +
       `Utmaning: Bitti ${bCh ? "⭐" : "—"} | Mattias ${mCh ? "⭐" : "—"}`;
 
-    // Utmaningsknapp låses om DU redan gjort den
     if (challengeDoneBtn) {
       if (!who) {
         challengeDoneBtn.disabled = true;
@@ -336,7 +355,6 @@ function setStatus(msg){
       }
     }
 
-    // Ring Allar syns bara 10/20/30/40/50/60 (+2 en gång/person/dag)
     if (callBtn) {
       const isCallDay = day % 10 === 0;
       if (!isCallDay) {
@@ -367,7 +385,7 @@ function setStatus(msg){
         confettiBurst("mega");
       }
     }
-      if (bOpened && mOpened && bCh && mCh) {
+    if (bOpened && mOpened && bCh && mCh) {
       const key2 = `${day}-both`;
       if (!fired.has(key2)) {
         fired.add(key2);
@@ -377,7 +395,6 @@ function setStatus(msg){
     }
   }
 
-  // ----- Firestore actions -----
   async function awardOpenDay(day) {
     if (!who) return alert("Välj Bitti eller Mattias först.");
     await updateDoc(gameRef, {
@@ -420,11 +437,11 @@ function setStatus(msg){
   const closeBtn = $("#close");
   const challengeDoneBtn = $("#challengeDoneBtn");
   const callAllarBtn = $("#callAllarBtn");
-  const statusLine = $("#statusLine");
 
   function openModal(day) {
     currentDay = day;
-    if (statusLine) statusLine.textContent = "Status: väntar på synk…";
+    const line = $("#statusLine");
+    if (line) line.textContent = "Status: väntar på synk…";
 
     const d = content?.[String(day)];
     if (contentEl) contentEl.textContent = d?.text ?? "💙 Idag: fortsätt bara. / Allar";
@@ -443,7 +460,6 @@ function setStatus(msg){
 
   callAllarBtn && callAllarBtn.addEventListener("click", () => {
     if (!currentDay) return;
-    // kör utan await så tel: öppnas snabbt
     awardCallBonus(currentDay);
   });
 
@@ -459,35 +475,26 @@ function setStatus(msg){
   });
 
   // ----- Realtime snapshot -----
- onSnapshot(
-  gameRef,
-  (snap) => {
-    setStatus("Snapshot OK. exists=" + snap.exists());
-    gameState = snap.data() || null;
-// markera dagar som klara för vald person
-const whoLocal = localStorage.getItem("who");
-if (whoLocal && gameState?.participants?.[whoLocal]?.openedDays) {
-  const set = new Set(gameState.participants[whoLocal].openedDays);
-  document.querySelectorAll(".day").forEach(d => {
-    const n = Number(d.dataset.day);
-    d.classList.toggle("done", set.has(n));
-  });
-}
+  onSnapshot(
+    gameRef,
+    (snap) => {
+      setStatus("Snapshot OK. exists=" + snap.exists());
+      gameState = snap.data() || null;
 
-    updateLeaderboard();
-    updateStats();
-    updateMoney();
-    renderBadges();
-    if (currentDay) updateStatusLine(currentDay);
-  },
-  (err) => {
-    console.error("Firestore onSnapshot error:", err);
-    setStatus("Firestore FEL: " + (err.code || err.message));
-  }
-);
+      // safe: markera done efter att snapshot kommit
+      markDoneDays(gameState);
 
+      updateLeaderboard();
+      updateStats();
+      updateMoney();
+      renderBadges();
+      if (currentDay) updateStatusLine(currentDay);
+    },
+    (err) => {
+      console.error("Firestore onSnapshot error:", err);
+      setStatus("Firestore FEL: " + (err.code || err.message));
+    }
+  );
 }
 
 init().catch((err) => console.error("Init failed:", err));
-
-
