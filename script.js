@@ -464,6 +464,15 @@ function setStatus(msg){
   (snap) => {
     setStatus("Snapshot OK. exists=" + snap.exists());
     gameState = snap.data() || null;
+// markera dagar som klara för vald person
+const whoLocal = localStorage.getItem("who");
+if (whoLocal && gameState?.participants?.[whoLocal]?.openedDays) {
+  const set = new Set(gameState.participants[whoLocal].openedDays);
+  document.querySelectorAll(".day").forEach(d => {
+    const n = Number(d.dataset.day);
+    d.classList.toggle("done", set.has(n));
+  });
+}
 
     updateLeaderboard();
     updateStats();
@@ -480,4 +489,5 @@ function setStatus(msg){
 }
 
 init().catch((err) => console.error("Init failed:", err));
+
 
