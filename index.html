@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Sluta snusa</title>
+  <title>Sluta snusa – Barça Edition</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
   <header class="header">
     <h1>🔵🔴 Sluta snusa ⚽</h1>
-    <p>Bitti & Mattias – 60 matcher. Ett lag. / Allar</p>
+    <p>Bitti &amp; Mattias – 60 matcher. Ett lag. / Allar</p>
 
     <div class="who">
-      Jag är:
+      <span>Jag är:</span>
       <button id="iAmBitti" type="button">Bitti</button>
       <button id="iAmMattias" type="button">Mattias</button>
       <span id="whoChosen"></span>
@@ -28,12 +29,15 @@
   </section>
 
   <main>
-    <div class="calendar"></div>
+    <div class="calendar" aria-label="Kalender med 60 dagar"></div>
   </main>
 
-  <div id="modal" class="modal hidden">
+  <!-- MODAL -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-content">
       <button id="close" class="close-btn" aria-label="Stäng">&times;</button>
+
+      <h3 id="modalTitle" style="margin:0 0 10px;">Dagens lucka</h3>
 
       <p id="content" class="modal-text"></p>
 
@@ -56,7 +60,7 @@
     </div>
   </div>
 
-  <!-- Kör din app-kod som module (behövs för Firebase CDN imports) -->
+  <!-- App-kod (Firebase imports kräver module) -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
