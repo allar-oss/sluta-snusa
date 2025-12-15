@@ -178,6 +178,50 @@ async function init() {
     if (pb) pb.textContent = String(bPts);
     if (pm) pm.textContent = String(mPts);
   }
+  function computeStreak(openedDaysArr){
+  // streak = antal dagar i rad från dag 1 (1,2,3,...) utan hål
+  // exempel: [1,2,3,5] -> streak 3
+  const set = new Set(openedDaysArr || []);
+  let streak = 0;
+  for(let d=1; d<=TOTAL_DAYS; d++){
+    if(set.has(d)) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function updateStats(){
+  const b = getParticipant("bitti") || {};
+  const m = getParticipant("mattias") || {};
+
+  const bDone = (b.openedDays || []).length;
+  const mDone = (m.openedDays || []).length;
+
+  const bStreak = computeStreak(b.openedDays);
+  const mStreak = computeStreak(m.openedDays);
+
+  // text
+  const sb = document.getElementById("streakBitti");
+  const sm = document.getElementById("streakMattias");
+  const db = document.getElementById("doneDaysBitti");
+  const dm = document.getElementById("doneDaysMattias");
+
+  if (sb) sb.textContent = String(bStreak);
+  if (sm) sm.textContent = String(mStreak);
+  if (db) db.textContent = String(bDone);
+  if (dm) dm.textContent = String(mDone);
+
+  // progress bars
+  const pb = document.getElementById("progressFillBitti");
+  const pm = document.getElementById("progressFillMattias");
+
+  const bPct = Math.min(100, (bDone / TOTAL_DAYS) * 100);
+  const mPct = Math.min(100, (mDone / TOTAL_DAYS) * 100);
+
+  if (pb) pb.style.width = `${bPct}%`;
+  if (pm) pm.style.width = `${mPct}%`;
+}
+
 
   function updateStatusLine(day) {
     const line = $("#statusLine");
@@ -265,10 +309,12 @@ async function init() {
   // Realtime
   try {
     onSnapshot(gameRef, (snap) => {
-      gameState = snap.data() || null;
-      updateLeaderboard();
-      if (currentDay) updateStatusLine(currentDay);
-    });
+  gameState = snap.data() || null;
+  updateLeaderboard();
+  updateStats();
+  if (currentDay) updateStatusLine(currentDay);
+});
+
   } catch (e) {
     console.error("onSnapshot failed:", e);
   }
@@ -379,3 +425,4 @@ async function init() {
 }
 
 init().catch((err) => console.error("Init failed:", err));
+
