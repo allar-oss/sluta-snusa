@@ -1,21 +1,35 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
-  getFirestore, doc, onSnapshot, updateDoc,
-  arrayUnion, increment, serverTimestamp
+  getFirestore,
+  doc,
+  onSnapshot,
+  updateDoc,
+  arrayUnion,
+  increment,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* ====== 1) FYLL I DIN FIREBASE CONFIG ====== */
+/* =========================
+   1) FYLL I DIN FIREBASE CONFIG
+   (Firebase Console -> Project settings -> Your apps -> Web app)
+========================= */
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
   projectId: "YOUR_PROJECT_ID"
 };
 
-/* ====== 2) SETTINGS ====== */
-const GAME_DOC = "sluta-snusa"; // games/sluta-snusa
-const ALLAR_PHONE = "+46700000000";
-const startDate = new Date(); // start idag
+/* =========================
+   2) SETTINGS
+========================= */
+const GAME_DOC_ID = "sluta-snusa";      // games/sluta-snusa
+const ALLAR_PHONE = "+46700000000";     // byt till ditt riktiga nummer
+const TOTAL_DAYS = 60;
+
+// Startdatum för “en ruta per dag”.
+// Vill du att dag 1 alltid ska vara öppen direkt: kör new Date()
+const startDate = new Date();
 
 const backgrounds = [
   "images/bg1.jpg",
@@ -24,173 +38,252 @@ const backgrounds = [
   "images/bg4.jpg"
 ];
 
-/* ====== 3) Confetti ====== */
-function popConfetti(){
-  const emojis = ["🎉","🎊","⚽","🔵","🔴"];
-  for(let i=0;i<22;i++){
+/* =========================
+   3) HELPERS
+========================= */
+function $(sel) {
+  const el = document.querySelector(sel);
+  if (!el) console.warn("Missing element:", sel);
+  return el;
+}
+
+function popConfetti() {
+  const emojis = ["🎉", "🎊", "⚽", "🔵", "🔴"];
+  for (let i = 0; i < 22; i++) {
     const el = document.createElement("div");
     el.className = "confetti";
-    el.innerText = emojis[Math.floor(Math.random()*emojis.length)];
-    el.style.left = Math.random()*100 + "vw";
-    el.style.fontSize = (16 + Math.random()*18) + "px";
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = Math.random() * 100 + "vw";
+    el.style.fontSize = (16 + Math.random() * 18) + "px";
     document.body.appendChild(el);
-    setTimeout(()=>el.remove(), 1400);
+    setTimeout(() => el.remove(), 1400);
   }
 }
 
-/* ====== 4) Bakgrundsbildspel ====== */
-let bgIndex = 0;
-function changeBackground(){
-  document.body.style.backgroundImage = `url('${backgrounds[bgIndex]}')`;
-  bgIndex = (bgIndex + 1) % backgrounds.length;
-}
-changeBackground();
-setInterval(changeBackground, 15000);
-
-/* ====== 5) Firebase init + auth ====== */
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-await signInAnonymously(auth);
-
-/* ====== 6) Välj spelare ====== */
-let who = localStorage.getItem("who"); // "bitti" | "mattias"
-const whoChosen = document.getElementById("whoChosen");
-
-function setWho(v){
-  who = v;
-  localStorage.setItem("who", v);
-  whoChosen.textContent = `✅ ${v === "bitti" ? "Bitti" : "Mattias"}`;
-}
-document.getElementById("iAmBitti").onclick = () => setWho("bitti");
-document.getElementById("iAmMattias").onclick = () => setWho("mattias");
-if (who) whoChosen.textContent = `✅ ${who === "bitti" ? "Bitti" : "Mattias"}`;
-
-/* ====== 7) Firestore refs ====== */
-const gameRef = doc(db, "games", GAME_DOC);
-
-/* ====== 8) UI: skapa 60 luckor ====== */
-const cal = document.querySelector(".calendar");
-for(let i=1;i<=60;i++){
-  const d = document.createElement("div");
-  d.className="day";
-  d.innerText=i;
-  d.dataset.day=i;
-  cal.appendChild(d);
+function dateForDay(dayNumber) {
+  const d = new Date(startDate);
+  d.setDate(startDate.getDate() + (dayNumber - 1));
+  return d;
 }
 
-let currentDay = null;
-let content = null; // from content.json
-let gameState = null; // from firestore
-
-/* ====== 9) Ladda content.json ====== */
-content = await fetch("content.json").then(r=>r.json());
-
-/* ====== 10) Realtime lyssning för leaderboard & status ====== */
-onSnapshot(gameRef, (snap) => {
-  gameState = snap.data();
-
-  const bPts = gameState?.participants?.bitti?.points ?? 0;
-  const mPts = gameState?.participants?.mattias?.points ?? 0;
-
-  document.getElementById("pointsBitti").textContent = bPts;
-  document.getElementById("pointsMattias").textContent = mPts;
-
-  // om modal är öppen uppdatera statusrad
-  if (currentDay) updateStatusLine(currentDay);
-});
-
-function openedSet(person){
-  return new Set(gameState?.participants?.[person]?.openedDays ?? []);
-}
-function challengeSet(person){
-  return new Set(gameState?.participants?.[person]?.challengeDoneDays ?? []);
+function isLocked(dayNumber) {
+  return new Date() < dateForDay(dayNumber);
 }
 
-function updateStatusLine(day){
-  if(!gameState){
-    document.getElementById("statusLine").textContent = "Status: laddar…";
-    return;
+/* =========================
+   4) MAIN INIT (felsäker)
+========================= */
+async function init() {
+  // ----- A) Rendera kalendern direkt (oavsett Firebase) -----
+  const calendar = $(".calendar");
+  if (!calendar) return;
+
+  calendar.innerHTML = "";
+  for (let i = 1; i <= TOTAL_DAYS; i++) {
+    const tile = document.createElement("div");
+    tile.className = "day";
+    tile.dataset.day = String(i);
+    tile.textContent = String(i);
+    if (isLocked(i)) tile.classList.add("locked");
+    calendar.appendChild(tile);
   }
-  const bOpened = openedSet("bitti").has(day);
-  const mOpened = openedSet("mattias").has(day);
-  const bCh = challengeSet("bitti").has(day);
-  const mCh = challengeSet("mattias").has(day);
 
-  document.getElementById("statusLine").textContent =
-    `Dag ${day} — Öppnad: Bitti ${bOpened ? "✅" : "⏳"} | Mattias ${mOpened ? "✅" : "⏳"} • Utmaning: Bitti ${bCh ? "⭐" : "—"} | Mattias ${mCh ? "⭐" : "—"}`;
+  // ----- B) Bakgrundsbildspel -----
+  let bgIndex = 0;
+  function changeBackground() {
+    // om bilder saknas, låt det bara vara (ingen crash)
+    document.body.style.backgroundImage = `url('${backgrounds[bgIndex]}')`;
+    bgIndex = (bgIndex + 1) % backgrounds.length;
+  }
+  changeBackground();
+  setInterval(changeBackground, 15000);
 
-  if (bOpened && mOpened) popConfetti();
-}
+  // ----- C) UI: välj spelare -----
+  let who = localStorage.getItem("who"); // "bitti" | "mattias"
+  const whoChosen = $("#whoChosen");
+  const bittiBtn = $("#iAmBitti");
+  const mattiasBtn = $("#iAmMattias");
 
-/* ====== 11) Firestore actions ====== */
-async function awardOpenDay(day){
-  if(!who) return alert("Välj Bitti eller Mattias först.");
+  function setWho(v) {
+    who = v;
+    localStorage.setItem("who", v);
+    if (whoChosen) whoChosen.textContent = `✅ ${v === "bitti" ? "Bitti" : "Mattias"}`;
+  }
 
-  await updateDoc(gameRef, {
-    [`participants.${who}.openedDays`]: arrayUnion(day),
-    [`participants.${who}.points`]: increment(1),
-    updatedAt: serverTimestamp()
-  });
+  bittiBtn && (bittiBtn.onclick = () => setWho("bitti"));
+  mattiasBtn && (mattiasBtn.onclick = () => setWho("mattias"));
+  if (who && whoChosen) whoChosen.textContent = `✅ ${who === "bitti" ? "Bitti" : "Mattias"}`;
 
-  popConfetti();
-}
+  // ----- D) Ladda content.json (behövs för modaltext) -----
+  let content = {};
+  try {
+    content = await fetch("content.json").then((r) => r.json());
+  } catch (e) {
+    console.error("Failed to load content.json", e);
+    // vi låter appen fortsätta ändå
+  }
 
-async function awardChallenge(day){
-  if(!who) return alert("Välj Bitti eller Mattias först.");
+  // ----- E) Firebase init + auth + firestore -----
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  await updateDoc(gameRef, {
-    [`participants.${who}.challengeDoneDays`]: arrayUnion(day),
-    [`participants.${who}.points`]: increment(1),
-    updatedAt: serverTimestamp()
-  });
+  try {
+    await signInAnonymously(auth);
+  } catch (e) {
+    console.error("Anonymous auth failed:", e);
+    // kalendern finns ändå – men synk funkar inte
+  }
 
-  popConfetti();
-}
+  const gameRef = doc(db, "games", GAME_DOC_ID);
 
-/* ====== 12) Klick på luckor ====== */
-document.querySelectorAll(".day").forEach(dayEl => {
-  const n = Number(dayEl.dataset.day);
+  // ----- F) State + realtime -----
+  let gameState = null;
+  let currentDay = null;
 
-  const openDate = new Date(startDate);
-  openDate.setDate(startDate.getDate() + n - 1);
-  if(new Date() < openDate) dayEl.classList.add("locked");
+  function getParticipant(p) {
+    return gameState?.participants?.[p] ?? null;
+  }
+  function openedSet(p) {
+    return new Set(getParticipant(p)?.openedDays ?? []);
+  }
+  function challengeSet(p) {
+    return new Set(getParticipant(p)?.challengeDoneDays ?? []);
+  }
 
-  dayEl.onclick = async () => {
-    if(dayEl.classList.contains("locked")) return;
+  function updateLeaderboard() {
+    const bPts = getParticipant("bitti")?.points ?? 0;
+    const mPts = getParticipant("mattias")?.points ?? 0;
+    const pb = $("#pointsBitti");
+    const pm = $("#pointsMattias");
+    if (pb) pb.textContent = String(bPts);
+    if (pm) pm.textContent = String(mPts);
+  }
 
-    currentDay = n;
+  function updateStatusLine(day) {
+    const line = $("#statusLine");
+    if (!line) return;
 
-    // Visa text + challenge
-    const d = content[String(n)];
-    document.getElementById("content").textContent = d?.text ?? "💙 Idag: fortsätt bara. / Allar";
-    document.getElementById("challengeText").textContent = d?.challenge ?? "Gör något snällt för någon idag.";
-
-    // ring knapp
-    const callBtn = document.getElementById("callAllarBtn");
-    if(n % 10 === 0){
-      callBtn.classList.remove("hidden");
-      callBtn.href = `tel:${ALLAR_PHONE}`;
-    } else {
-      callBtn.classList.add("hidden");
+    if (!gameState) {
+      line.textContent = "Status: laddar…";
+      return;
     }
 
-    // Ge +1 poäng + markera öppnad dag i Firestore
-    await awardOpenDay(n);
+    const bOpened = openedSet("bitti").has(day);
+    const mOpened = openedSet("mattias").has(day);
+    const bCh = challengeSet("bitti").has(day);
+    const mCh = challengeSet("mattias").has(day);
 
-    updateStatusLine(n);
-    document.getElementById("modal").classList.remove("hidden");
-  };
+    line.textContent =
+      `Dag ${day} — Öppnad: Bitti ${bOpened ? "✅" : "⏳"} | Mattias ${mOpened ? "✅" : "⏳"} • ` +
+      `Utmaning: Bitti ${bCh ? "⭐" : "—"} | Mattias ${mCh ? "⭐" : "—"}`;
+
+    // Bonus-känsla när båda öppnat
+    if (bOpened && mOpened) popConfetti();
+  }
+
+  // Realtime lyssning
+  try {
+    onSnapshot(gameRef, (snap) => {
+      gameState = snap.data() || null;
+      updateLeaderboard();
+      if (currentDay) updateStatusLine(currentDay);
+    });
+  } catch (e) {
+    console.error("onSnapshot failed:", e);
+  }
+
+  // ----- G) Firestore actions -----
+  async function awardOpenDay(day) {
+    if (!who) {
+      alert("Välj Bitti eller Mattias först.");
+      return;
+    }
+    try {
+      await updateDoc(gameRef, {
+        [`participants.${who}.openedDays`]: arrayUnion(day),
+        [`participants.${who}.points`]: increment(1),
+        updatedAt: serverTimestamp()
+      });
+      popConfetti();
+    } catch (e) {
+      console.error("awardOpenDay failed:", e);
+      alert("Kunde inte spara i Firebase. Kolla Console/loggar.");
+    }
+  }
+
+  async function awardChallenge(day) {
+    if (!who) {
+      alert("Välj Bitti eller Mattias först.");
+      return;
+    }
+    try {
+      await updateDoc(gameRef, {
+        [`participants.${who}.challengeDoneDays`]: arrayUnion(day),
+        [`participants.${who}.points`]: increment(1),
+        updatedAt: serverTimestamp()
+      });
+      popConfetti();
+    } catch (e) {
+      console.error("awardChallenge failed:", e);
+      alert("Kunde inte spara utmaning i Firebase. Kolla Console/loggar.");
+    }
+  }
+
+  // ----- H) Modal + klick på luckor -----
+  const modal = $("#modal");
+  const closeBtn = $("#close");
+  const contentEl = $("#content");
+  const challengeEl = $("#challengeText");
+  const challengeDoneBtn = $("#challengeDoneBtn");
+  const callAllarBtn = $("#callAllarBtn");
+
+  function openModal(day) {
+    currentDay = day;
+
+    const d = content?.[String(day)];
+    if (contentEl) contentEl.textContent = d?.text ?? "💙 Idag: fortsätt bara. / Allar";
+    if (challengeEl) challengeEl.textContent = d?.challenge ?? "Gör något snällt för någon idag.";
+
+    // ring-knapp var 10:e dag
+    if (callAllarBtn) {
+      if (day % 10 === 0) {
+        callAllarBtn.classList.remove("hidden");
+        callAllarBtn.href = `tel:${ALLAR_PHONE}`;
+      } else {
+        callAllarBtn.classList.add("hidden");
+      }
+    }
+
+    updateStatusLine(day);
+    modal && modal.classList.remove("hidden");
+  }
+
+  closeBtn && (closeBtn.onclick = () => modal && modal.classList.add("hidden"));
+  challengeDoneBtn && (challengeDoneBtn.onclick = async () => {
+    if (!currentDay) return;
+    await awardChallenge(currentDay);
+    updateStatusLine(currentDay);
+  });
+
+  // Klick på kalender
+  calendar.querySelectorAll(".day").forEach((tile) => {
+    tile.addEventListener("click", async () => {
+      const day = Number(tile.dataset.day);
+
+      if (tile.classList.contains("locked")) return;
+
+      // Öppna modal direkt (så de ser texten även om Firebase strular)
+      openModal(day);
+
+      // Ge poäng + markera öppnad (Firebase)
+      await awardOpenDay(day);
+      updateStatusLine(day);
+    });
+  });
+}
+
+// Kör init
+init().catch((err) => {
+  console.error("Init failed:", err);
 });
-
-/* ====== 13) Utmaning klar ====== */
-document.getElementById("challengeDoneBtn").onclick = async () => {
-  if(!currentDay) return;
-  await awardChallenge(currentDay);
-  updateStatusLine(currentDay);
-};
-
-/* ====== 14) Stäng modal ====== */
-document.getElementById("close").onclick = () => {
-  document.getElementById("modal").classList.add("hidden");
-};
