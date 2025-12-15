@@ -320,7 +320,7 @@ async function init() {
   }
 
   function updateStatusLine(day) {
-    const line = $("#statusLine");
+   
     const challengeDoneBtn = $("#challengeDoneBtn");
     const callBtn = $("#callAllarBtn");
     if (!line) return;
@@ -498,3 +498,4 @@ async function init() {
 }
 
 init().catch((err) => console.error("Init failed:", err));
+
