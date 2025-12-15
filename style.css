@@ -11,10 +11,20 @@
   --blue: #004d98;
   --red: #a50044;
 
+  /* NEW: extra pop */
+  --cyan: #22d3ee;
+  --pink: #fb7185;
+  --gold: #fbbf24;
+
   --shadow: 0 14px 40px rgba(0,0,0,0.35);
   --shadowSoft: 0 10px 26px rgba(0,0,0,0.22);
 
   --radius: 20px;
+
+  /* NEW: gradients */
+  --barcaGrad: linear-gradient(135deg, rgba(0,77,152,0.95), rgba(165,0,68,0.95));
+  --popGrad: linear-gradient(135deg, rgba(34,211,238,0.95), rgba(251,113,133,0.95));
+  --goldGrad: linear-gradient(135deg, rgba(251,191,36,0.95), rgba(34,211,238,0.85));
 }
 
 *{ box-sizing:border-box; }
@@ -42,6 +52,20 @@ body::before{
   background: linear-gradient(180deg, var(--bgOverlayTop), var(--bgOverlayBottom));
   pointer-events:none;
   z-index: 0;
+}
+
+/* NEW: glow layer (SAFE: still behind everything) */
+body::after{
+  content:"";
+  position:fixed;
+  inset:-20%;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(34,211,238,0.14), transparent 45%),
+    radial-gradient(circle at 85% 25%, rgba(251,113,133,0.12), transparent 50%),
+    radial-gradient(circle at 50% 90%, rgba(251,191,36,0.10), transparent 55%);
+  pointer-events:none;
+  z-index: 0;
+  filter: blur(2px);
 }
 
 a{ color: inherit; }
@@ -90,16 +114,17 @@ main{
   background: rgba(0,0,0,0.35);
   color: var(--text);
   padding: 10px 14px;
-  border-radius: 14px;
+  border-radius: 999px; /* NEW: pill */
   font-weight: 900;
   cursor: pointer;
   box-shadow: var(--shadowSoft);
-  transition: transform 120ms ease, filter 120ms ease, background 120ms ease;
+  transition: transform 120ms ease, filter 120ms ease, background 120ms ease, box-shadow 120ms ease;
 }
 
 .who button:hover{
-  transform: translateY(-1px);
-  filter: brightness(1.05);
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 14px 32px rgba(0,0,0,0.28);
 }
 
 #whoChosen{ font-weight: 1000; }
@@ -191,7 +216,7 @@ main{
   height: 100%;
   width: 0%;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(0,77,152,0.95), rgba(165,0,68,0.95));
+  background: var(--popGrad); /* NEW: pop gradient */
   transition: width 300ms ease;
 }
 
@@ -260,14 +285,25 @@ main{
   outline: none;
 }
 
+.moneySettings input:focus{
+  border-color: rgba(34,211,238,0.55);
+  box-shadow: 0 0 0 4px rgba(34,211,238,0.10);
+}
+
 .moneySettings button{
   padding: 11px 14px;
   border-radius: 12px;
   border: none;
   font-weight: 1100;
   cursor:pointer;
-  background: linear-gradient(135deg, var(--blue), var(--red));
+  background: var(--barcaGrad); /* keep Barca */
   color:#fff;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.moneySettings button:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.06);
 }
 
 .moneyHint{
@@ -325,16 +361,28 @@ main{
   user-select:none;
 
   border: 1px solid rgba(255,255,255,0.14);
-  background: linear-gradient(135deg, rgba(0,77,152,0.88), rgba(165,0,68,0.88));
+  background: linear-gradient(135deg, rgba(0,77,152,0.92), rgba(165,0,68,0.92)); /* NEW: stronger */
   box-shadow: var(--shadowSoft);
 
   transform: translateY(0);
   transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+  position: relative; /* NEW: sheen */
+  overflow: hidden;  /* NEW: sheen */
+}
+
+/* NEW: sheen highlight */
+.day::after{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.16) 50%, transparent 60%);
+  transform: translateX(-30%);
+  opacity: 0.38;
 }
 
 .day:hover{
   transform: translateY(-2px);
-  filter: brightness(1.07);
+  filter: brightness(1.09);
 }
 
 .day.locked{
@@ -411,15 +459,23 @@ main{
   cursor: pointer;
   padding: 12px 14px;
   border-radius: 14px;
-  color: #fff;
+  color: #06111f;         /* NEW */
   font-weight: 1100;
-  background: #0b1c2d;
-  box-shadow: 0 14px 30px rgba(11,28,45,0.22);
+  background: var(--popGrad); /* NEW: pop */
+  box-shadow: 0 14px 30px rgba(11,28,45,0.18);
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.challenge-buttons button:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.03);
 }
 
 .challenge-buttons button:disabled{
   opacity: 0.55;
   cursor: not-allowed;
+  transform: none;
+  filter: none;
 }
 
 .status{
@@ -436,12 +492,18 @@ main{
   margin-top: 14px;
   padding: 12px 14px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(0,77,152,0.95), rgba(165,0,68,0.95));
+  background: var(--barcaGrad); /* NEW: uses variable */
   color: #fff;
   text-decoration: none;
   font-weight: 1100;
   box-shadow: var(--shadowSoft);
   border: 1px solid rgba(255,255,255,0.14);
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.call-btn:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.06);
 }
 
 .call-btn.claimed{
