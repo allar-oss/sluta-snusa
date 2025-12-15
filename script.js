@@ -33,6 +33,7 @@ const TOTAL_DAYS = 60;
 // Dag 1 blir öppen direkt
 const startDate = new Date();
 
+// Bakgrunder ligger i /images/
 const backgrounds = ["images/bg1.jpg","images/bg2.jpg","images/bg3.jpg","images/bg4.jpg"];
 
 /* =========================
@@ -92,6 +93,7 @@ function confettiBurst(intensity = "normal") {
 }
 
 /* ===== Streak ===== */
+// Streak = antal dagar i rad från dag 1: [1,2,3,5] => 3
 function computeStreak(openedDaysArr) {
   const set = new Set(openedDaysArr || []);
   let streak = 0;
@@ -119,10 +121,25 @@ const BADGES = [
    6) INIT
 ========================= */
 async function init() {
-  // ----- Rendera kalender först -----
+  /* ---------- UI refs ---------- */
   const calendar = $(".calendar");
   if (!calendar) return;
 
+  const statusLineEl = document.getElementById("statusLine");
+  const modal = $("#modal");
+  const contentEl = $("#content");
+  const challengeEl = $("#challengeText");
+  const closeBtn = $("#close");
+  const challengeDoneBtn = $("#challengeDoneBtn");
+  const callAllarBtn = $("#callAllarBtn");
+  const whoChosen = $("#whoChosen");
+
+  function setStatus(msg){
+    console.log(msg);
+    if (statusLineEl) statusLineEl.textContent = msg;
+  }
+
+  /* ---------- Render calendar immediately ---------- */
   calendar.innerHTML = "";
   for (let i = 1; i <= TOTAL_DAYS; i++) {
     const tile = document.createElement("div");
@@ -133,14 +150,7 @@ async function init() {
     calendar.appendChild(tile);
   }
 
-  // Status helper (måste finnas innan auth snapshot)
-  const statusLineEl = document.getElementById("statusLine");
-  function setStatus(msg){
-    console.log(msg);
-    if(statusLineEl) statusLineEl.textContent = msg;
-  }
-
-  // ----- Background slideshow -----
+  /* ---------- Background slideshow ---------- */
   let bgIndex = 0;
   function changeBackground() {
     document.body.style.backgroundImage = `url('${backgrounds[bgIndex]}')`;
@@ -149,13 +159,12 @@ async function init() {
   changeBackground();
   setInterval(changeBackground, 15000);
 
-  // ----- Välj person -----
-  let who = localStorage.getItem("who"); // "bitti" | "mattias"
-  const whoChosen = $("#whoChosen");
-
-  // gameState/currentDay måste finnas innan setWho använder dem
+  /* ---------- State ---------- */
   let gameState = null;
   let currentDay = null;
+
+  // Vem är inloggad i UI (localStorage)
+  let who = localStorage.getItem("who"); // "bitti" | "mattias"
 
   // anti-spam mega-confetti per dag
   const fired = new Set();
@@ -183,7 +192,6 @@ async function init() {
     who = v;
     localStorage.setItem("who", v);
     if (whoChosen) whoChosen.textContent = `✅ ${v === "bitti" ? "Bitti" : "Mattias"}`;
-    // direkt visuellt uppdatera "done"
     markDoneDays(gameState);
     if (currentDay) updateStatusLine(currentDay);
   }
@@ -192,7 +200,7 @@ async function init() {
   $("#iAmMattias") && ($("#iAmMattias").onclick = () => setWho("mattias"));
   if (who && whoChosen) whoChosen.textContent = `✅ ${who === "bitti" ? "Bitti" : "Mattias"}`;
 
-  // ----- Ladda content.json -----
+  /* ---------- Load content.json ---------- */
   let content = {};
   try {
     content = await fetch("content.json").then((r) => r.json());
@@ -200,7 +208,7 @@ async function init() {
     console.error("Failed to load content.json", e);
   }
 
-  // ----- Money settings UI init -----
+  /* ---------- Money settings UI init ---------- */
   const ms = getMoneySettings();
   const costInput = document.getElementById("costPerDay");
   const dateInput = document.getElementById("startDateInput");
@@ -212,10 +220,10 @@ async function init() {
     const iso = dateInput?.value || new Date().toISOString().slice(0,10);
     saveMoneySettings({ costPerDay: Math.max(0, cost), startISO: iso });
     confettiBurst("normal");
-    updateMoney(); // refresh direkt
+    updateMoney();
   });
 
-  // ----- Firebase init -----
+  /* ---------- Firebase init ---------- */
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
@@ -230,6 +238,7 @@ async function init() {
 
   const gameRef = doc(db, "games", GAME_DOC_ID);
 
+  /* ---------- Helpers for state ---------- */
   function getParticipant(p) {
     return gameState?.participants?.[p] ?? null;
   }
@@ -243,6 +252,7 @@ async function init() {
     return new Set(getParticipant(p)?.callBonusDays ?? []);
   }
 
+  /* ---------- UI render ---------- */
   function updateLeaderboard() {
     const bPts = getParticipant("bitti")?.points ?? 0;
     const mPts = getParticipant("mattias")?.points ?? 0;
@@ -320,9 +330,9 @@ async function init() {
   }
 
   function updateStatusLine(day) {
-   
-    const challengeDoneBtn = $("#challengeDoneBtn");
-    const callBtn = $("#callAllarBtn");
+    const line = statusLineEl;
+    const callBtn = callAllarBtn; // vi har redan ref
+
     if (!line) return;
 
     if (!gameState) {
@@ -344,6 +354,7 @@ async function init() {
       `Dag ${day} — Öppnad: Bitti ${bOpened ? "✅" : "⏳"} | Mattias ${mOpened ? "✅" : "⏳"} • ` +
       `Utmaning: Bitti ${bCh ? "⭐" : "—"} | Mattias ${mCh ? "⭐" : "—"}`;
 
+    // Utmaningsknapp låses om DU redan gjort den
     if (challengeDoneBtn) {
       if (!who) {
         challengeDoneBtn.disabled = true;
@@ -355,6 +366,7 @@ async function init() {
       }
     }
 
+    // Ring Allar syns bara 10/20/30/40/50/60 (+2 en gång/person/dag)
     if (callBtn) {
       const isCallDay = day % 10 === 0;
       if (!isCallDay) {
@@ -378,6 +390,7 @@ async function init() {
 
     if (bCh && mCh) line.textContent += "  🎉 Båda klara!";
 
+    // confetti när båda öppnat
     if (bOpened && mOpened) {
       const key = `${day}-opened`;
       if (!fired.has(key)) {
@@ -385,6 +398,8 @@ async function init() {
         confettiBurst("mega");
       }
     }
+
+    // extra confetti när båda öppnat + båda gjort challenge
     if (bOpened && mOpened && bCh && mCh) {
       const key2 = `${day}-both`;
       if (!fired.has(key2)) {
@@ -395,6 +410,7 @@ async function init() {
     }
   }
 
+  /* ---------- Firestore actions ---------- */
   async function awardOpenDay(day) {
     if (!who) return alert("Välj Bitti eller Mattias först.");
     await updateDoc(gameRef, {
@@ -430,18 +446,10 @@ async function init() {
     confettiBurst("mega");
   }
 
-  // ----- Modal wiring -----
-  const modal = $("#modal");
-  const contentEl = $("#content");
-  const challengeEl = $("#challengeText");
-  const closeBtn = $("#close");
-  const challengeDoneBtn = $("#challengeDoneBtn");
-  const callAllarBtn = $("#callAllarBtn");
-
+  /* ---------- Modal ---------- */
   function openModal(day) {
     currentDay = day;
-    const line = $("#statusLine");
-    if (line) line.textContent = "Status: väntar på synk…";
+    if (statusLineEl) statusLineEl.textContent = "Status: väntar på synk…";
 
     const d = content?.[String(day)];
     if (contentEl) contentEl.textContent = d?.text ?? "💙 Idag: fortsätt bara. / Allar";
@@ -452,6 +460,7 @@ async function init() {
   }
 
   closeBtn && (closeBtn.onclick = () => modal && modal.classList.add("hidden"));
+
   challengeDoneBtn && (challengeDoneBtn.onclick = async () => {
     if (!currentDay) return;
     await awardChallenge(currentDay);
@@ -474,14 +483,13 @@ async function init() {
     });
   });
 
-  // ----- Realtime snapshot -----
+  /* ---------- Realtime snapshot ---------- */
   onSnapshot(
     gameRef,
     (snap) => {
       setStatus("Snapshot OK. exists=" + snap.exists());
       gameState = snap.data() || null;
 
-      // safe: markera done efter att snapshot kommit
       markDoneDays(gameState);
 
       updateLeaderboard();
@@ -498,4 +506,3 @@ async function init() {
 }
 
 init().catch((err) => console.error("Init failed:", err));
-
