@@ -28,6 +28,48 @@
     </div>
   </section>
   <section class="stats">
+    <section class="extras">
+  <h2>💰 Sparade pengar</h2>
+
+  <div class="moneyGrid">
+    <div class="moneyCard">
+      <div class="moneyTitle">💙 Bitti</div>
+      <div class="moneyNumber"><span id="moneyBitti">0</span> kr</div>
+      <div class="moneySmall">≈ <span id="moneyBittiDay">0</span> kr/dag</div>
+    </div>
+
+    <div class="moneyCard">
+      <div class="moneyTitle">❤️ Mattias</div>
+      <div class="moneyNumber"><span id="moneyMattias">0</span> kr</div>
+      <div class="moneySmall">≈ <span id="moneyMattiasDay">0</span> kr/dag</div>
+    </div>
+
+    <div class="moneyCard total">
+      <div class="moneyTitle">🏦 Totalt</div>
+      <div class="moneyNumber"><span id="moneyTotal">0</span> kr</div>
+      <div class="moneySmall">Ni är rika på vilja. 💪</div>
+    </div>
+  </div>
+
+  <div class="moneySettings">
+    <label>
+      Kostnad snus / dag (kr):
+      <input id="costPerDay" type="number" min="0" step="1" value="60" />
+    </label>
+
+    <label>
+      Startdatum (dag 1):
+      <input id="startDateInput" type="date" />
+    </label>
+
+    <button id="saveMoneySettings" type="button">Spara inställningar</button>
+    <div class="moneyHint">Tips: du kan justera detta när som helst. Sparas lokalt i din webbläsare.</div>
+  </div>
+
+  <h2 style="margin-top:18px;">🏅 Barça-badges</h2>
+  <div id="badgesWrap" class="badgesWrap"></div>
+</section>
+
   <h2>📈 Progress</h2>
 
   <div class="statGrid">
@@ -92,5 +134,6 @@
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
 
 
