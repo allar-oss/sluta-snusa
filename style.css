@@ -276,3 +276,136 @@ body{
   .calendar{ grid-template-columns: repeat(5, 1fr); }
   .statGrid{ grid-template-columns: 1fr; }
 }
+/* ===== Extras: Money + Badges ===== */
+.extras{
+  max-width: 960px;
+  margin: 10px auto 30px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: rgba(0,0,0,0.30);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+  color: #fff;
+}
+
+.extras h2{
+  margin: 0 0 12px;
+}
+
+.moneyGrid{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.moneyCard{
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+.moneyCard.total{
+  background: linear-gradient(135deg, rgba(0,77,152,0.30), rgba(165,0,68,0.30));
+}
+
+.moneyTitle{
+  font-weight: 1000;
+  opacity: 0.95;
+  margin-bottom: 6px;
+}
+
+.moneyNumber{
+  font-size: 28px;
+  font-weight: 1100;
+  letter-spacing: 0.2px;
+}
+
+.moneySmall{
+  opacity: 0.85;
+  margin-top: 4px;
+}
+
+.moneySettings{
+  margin-top: 14px;
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.moneySettings label{
+  display:flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.moneySettings input{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.25);
+  color: #fff;
+  outline: none;
+}
+
+.moneySettings button{
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 1000;
+  cursor:pointer;
+  background: linear-gradient(135deg, var(--blue), var(--red));
+  color:#fff;
+}
+
+.moneyHint{
+  width: 100%;
+  opacity: 0.75;
+  font-size: 13px;
+}
+
+/* Badges */
+.badgesWrap{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.badge{
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.14);
+  display:flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.badge.locked{
+  opacity: 0.55;
+  filter: grayscale(0.6);
+}
+
+.badgeIcon{
+  font-size: 28px;
+}
+
+.badgeTitle{
+  font-weight: 1000;
+}
+
+.badgeDesc{
+  opacity: 0.85;
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+@media(max-width: 720px){
+  .moneyGrid{ grid-template-columns: 1fr; }
+  .badgesWrap{ grid-template-columns: 1fr; }
+}
+
