@@ -26,7 +26,7 @@ const GAME_DOC_ID = "sluta-snusa";      // games/sluta-snusa
 const ALLAR_PHONE = "+46700000000";     // byt till ditt nummer
 const TOTAL_DAYS = 60;
 
-// Dag 1 öppen direkt: kör new Date()
+// Dag 1 öppen direkt:
 const startDate = new Date();
 
 const backgrounds = [
@@ -69,8 +69,7 @@ function confettiBurst(intensity = "normal") {
     el.style.left = Math.random() * 100 + "vw";
     el.style.fontSize = (14 + Math.random() * (intensity === "mega" ? 28 : 18)) + "px";
 
-    // lite mer spridning i mega-läget
-    const drift = (Math.random() - 0.5) * (intensity === "mega" ? 400 : 120);
+    const drift = (Math.random() - 0.5) * (intensity === "mega" ? 420 : 140);
     const rotate = Math.random() * 720;
 
     el.animate(
@@ -123,7 +122,6 @@ async function init() {
     who = v;
     localStorage.setItem("who", v);
     if (whoChosen) whoChosen.textContent = `✅ ${v === "bitti" ? "Bitti" : "Mattias"}`;
-    // när man byter person: uppdatera status/knappar om modal är öppen
     if (currentDay) updateStatusLine(currentDay);
   }
 
@@ -156,8 +154,7 @@ async function init() {
   let gameState = null;
   let currentDay = null;
 
-  // mega-confetti trigger så vi inte spammar när snapshot uppdateras flera gånger
-  // nyckel: `${day}-opened` eller `${day}-both`
+  // anti-spam för mega-confetti (per dag)
   const fired = new Set();
 
   function getParticipant(p) {
@@ -169,6 +166,9 @@ async function init() {
   function challengeSet(p) {
     return new Set(getParticipant(p)?.challengeDoneDays ?? []);
   }
+  function callBonusSet(p) {
+    return new Set(getParticipant(p)?.callBonusDays ?? []);
+  }
 
   function updateLeaderboard() {
     const bPts = getParticipant("bitti")?.points ?? 0;
@@ -179,10 +179,10 @@ async function init() {
     if (pm) pm.textContent = String(mPts);
   }
 
-  // ===== Polished status + Mega confetti rules =====
   function updateStatusLine(day) {
     const line = $("#statusLine");
     const challengeDoneBtn = $("#challengeDoneBtn");
+    const callBtn = $("#callAllarBtn");
     if (!line) return;
 
     if (!gameState) {
@@ -203,7 +203,7 @@ async function init() {
       `Dag ${day} — Öppnad: Bitti ${bOpened ? "✅" : "⏳"} | Mattias ${mOpened ? "✅" : "⏳"} • ` +
       `Utmaning: Bitti ${bCh ? "⭐" : "—"} | Mattias ${mCh ? "⭐" : "—"}`;
 
-    // Lås / ändra text på utmaningsknappen om DU redan gjort den
+    // Lås/ändra text på utmaningsknappen om DU redan gjort den
     if (challengeDoneBtn) {
       if (!who) {
         challengeDoneBtn.disabled = true;
@@ -217,12 +217,32 @@ async function init() {
       }
     }
 
-    // Text + bonus när båda gjort utmaningen
-    if (bCh && mCh) {
-      line.textContent += "  🎉 Båda klara!";
+    // Ring-Allar-bonus (endast dag 10/20/30/40/50/60)
+    if (callBtn) {
+      const isCallDay = day % 10 === 0;
+      if (!isCallDay) {
+        callBtn.classList.add("hidden");
+      } else {
+        callBtn.classList.remove("hidden");
+        callBtn.href = `tel:${ALLAR_PHONE}`;
+
+        if (who) {
+          const claimed = callBonusSet(who).has(day);
+          callBtn.textContent = claimed
+            ? "✅ Ring Allar (bonus redan tagen)"
+            : "📞 Ring Allar och hämta belöningen (+2p)";
+          callBtn.classList.toggle("claimed", claimed);
+        } else {
+          callBtn.textContent = "📞 Ring Allar och hämta belöningen (+2p)";
+          callBtn.classList.remove("claimed");
+        }
+      }
     }
 
-    // MEGA CONFETTI när båda har öppnat samma dag (en gång per dag)
+    // Text + bonus när båda gjort utmaningen
+    if (bCh && mCh) line.textContent += "  🎉 Båda klara!";
+
+    // MEGA confetti när båda öppnat samma dag (en gång)
     if (bOpened && mOpened) {
       const key = `${day}-opened`;
       if (!fired.has(key)) {
@@ -231,19 +251,18 @@ async function init() {
       }
     }
 
-    // EXTRA MEGA (en gång per dag) om båda även klarat utmaningen
+    // EXTRA MEGA om båda även gjort utmaningen (en gång)
     if (bOpened && mOpened && bCh && mCh) {
       const key2 = `${day}-both`;
       if (!fired.has(key2)) {
         fired.add(key2);
-        // dubbel-burst för extra wow
         confettiBurst("mega");
         setTimeout(() => confettiBurst("mega"), 350);
       }
     }
   }
 
-  // Realtime lyssning
+  // Realtime
   try {
     onSnapshot(gameRef, (snap) => {
       gameState = snap.data() || null;
@@ -256,17 +275,14 @@ async function init() {
 
   // ----- G) Firestore actions -----
   async function awardOpenDay(day) {
-    if (!who) {
-      alert("Välj Bitti eller Mattias först.");
-      return;
-    }
+    if (!who) return alert("Välj Bitti eller Mattias först.");
+
     try {
       await updateDoc(gameRef, {
         [`participants.${who}.openedDays`]: arrayUnion(day),
         [`participants.${who}.points`]: increment(1),
         updatedAt: serverTimestamp()
       });
-      // liten burst för "jag öppnade"
       confettiBurst("normal");
     } catch (e) {
       console.error("awardOpenDay failed:", e);
@@ -275,10 +291,8 @@ async function init() {
   }
 
   async function awardChallenge(day) {
-    if (!who) {
-      alert("Välj Bitti eller Mattias först.");
-      return;
-    }
+    if (!who) return alert("Välj Bitti eller Mattias först.");
+
     try {
       await updateDoc(gameRef, {
         [`participants.${who}.challengeDoneDays`]: arrayUnion(day),
@@ -292,7 +306,27 @@ async function init() {
     }
   }
 
-  // ----- H) Modal + klick på luckor -----
+  // +2 poäng när man trycker ring-knappen (en gång per person per dag)
+  async function awardCallBonus(day) {
+    if (!who) return;
+
+    // om redan tagen, gör inget
+    if (gameState && callBonusSet(who).has(day)) return;
+
+    try {
+      await updateDoc(gameRef, {
+        [`participants.${who}.callBonusDays`]: arrayUnion(day),
+        [`participants.${who}.points`]: increment(2),
+        updatedAt: serverTimestamp()
+      });
+      // lite extra fest
+      confettiBurst("mega");
+    } catch (e) {
+      console.error("awardCallBonus failed:", e);
+    }
+  }
+
+  // ----- H) Modal + klick -----
   const modal = $("#modal");
   const closeBtn = $("#close");
   const contentEl = $("#content");
@@ -304,26 +338,13 @@ async function init() {
   function openModal(day) {
     currentDay = day;
 
-    // sätt en direkt status (ingen "laddar")
     if (statusLine) statusLine.textContent = "Status: väntar på synk…";
 
     const d = content?.[String(day)];
     if (contentEl) contentEl.textContent = d?.text ?? "💙 Idag: fortsätt bara. / Allar";
     if (challengeEl) challengeEl.textContent = d?.challenge ?? "Gör något snällt för någon idag.";
 
-    // ring-knapp var 10:e dag (valfritt att även ge bonus senare)
-    if (callAllarBtn) {
-      if (day % 10 === 0) {
-        callAllarBtn.classList.remove("hidden");
-        callAllarBtn.href = `tel:${ALLAR_PHONE}`;
-      } else {
-        callAllarBtn.classList.add("hidden");
-      }
-    }
-
-    // Uppdatera status (om gameState redan finns)
     updateStatusLine(day);
-
     modal && modal.classList.remove("hidden");
   }
 
@@ -335,6 +356,14 @@ async function init() {
     updateStatusLine(currentDay);
   });
 
+  // När man klickar “Ring Allar”: ge +2 (utan att stoppa telefonlänken)
+  callAllarBtn && callAllarBtn.addEventListener("click", () => {
+    if (!currentDay) return;
+    if (currentDay % 10 !== 0) return; // bara ring-dagar
+    // fire-and-forget (för att tel: ska öppna snabbt)
+    awardCallBonus(currentDay);
+  });
+
   // Klick på kalender
   calendar.querySelectorAll(".day").forEach((tile) => {
     tile.addEventListener("click", async () => {
@@ -343,13 +372,10 @@ async function init() {
 
       openModal(day);
 
-      // ge öppningspoäng + markera öppnad
       await awardOpenDay(day);
       updateStatusLine(day);
     });
   });
 }
 
-init().catch((err) => {
-  console.error("Init failed:", err);
-});
+init().catch((err) => console.error("Init failed:", err));
