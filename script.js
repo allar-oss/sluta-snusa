@@ -165,6 +165,11 @@ async function init() {
     if (pb) pb.textContent = String(bPts);
     if (pm) pm.textContent = String(mPts);
   }
+  const statusLine = document.getElementById("statusLine");
+if (statusLine) {
+  statusLine.textContent = "Status: väntar på synk…";
+}
+
 
   function updateStatusLine(day) {
     const line = $("#statusLine");
@@ -293,4 +298,5 @@ async function init() {
 init().catch((err) => {
   console.error("Init failed:", err);
 });
+
 
