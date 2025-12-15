@@ -1,36 +1,103 @@
+:root{
+  --barca-red: rgba(165,0,68,0.88);
+  --barca-blue: rgba(0,77,152,0.88);
+  --glass: rgba(0,0,0,0.55);
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:#fff;
+  text-align:center;
+
+  /* Om du inte ser bakgrund: det betyder att bildspels-koden inte kör eller inga bilder finns */
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  transition: background-image 1s ease-in-out;
+}
+
+/* Mörk overlay så text alltid syns även på ljusa bilder */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35));
+  pointer-events:none;
+}
+
+.header{
+  position:relative;
+  max-width: 1100px;
+  margin: 18px auto 10px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px);
+}
+
+.header h1{
+  margin: 0 0 6px;
+  letter-spacing: 0.2px;
+}
+
+.header p{
+  margin:0;
+  opacity:0.9;
+}
+
+/* Leaderboard */
 .leaderboard{
-  background: rgba(0,0,0,0.55);
-  padding: 12px;
-  border-radius: 14px;
-  max-width: 400px;
+  position:relative;
+  max-width: 520px;
   margin: 10px auto 18px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+}
+
+.leaderboard h2{
+  margin:0 0 10px;
+  font-size: 18px;
 }
 
 .board{
-  display: flex;
-  justify-content: space-between;
-  font-weight: bold;
+  display:flex;
+  justify-content:space-between;
+  gap: 14px;
+  font-weight: 800;
 }
 
-.challenge{
-  margin-top: 12px;
-  background: #f4f4f4;
-  padding: 12px;
-  border-radius: 12px;
+.board > div{
+  flex:1;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.08);
 }
 
-.challenge-buttons{
-  display: flex;
+main{
+  position:relative;
+  max-width: 1100px;
+  margin: 0 auto 22px;
+  padding: 0 14px 18px;
+}
+
+/* Kalender */
+.calendar{
+  display:grid;
+  grid-template-columns: repeat(10, 1fr);
   gap: 10px;
-  margin-top: 10px;
 }
 
-.challenge-buttons button{
-  flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
+.day{
+  border-radius: 16px;
+  padding: 14px 0;
+  font-size: 16px;
+  font-weight: 800;
   cursor: pointer;
-  background: #0b1c2d;
-  color: white;
-}
+  user-select:none;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.22)
