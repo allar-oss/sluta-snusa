@@ -186,10 +186,22 @@ async function init() {
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  try { await signInAnonymously(auth); }
-  catch (e) { console.error("Anonymous auth failed:", e); }
+ try {
+  const cred = await signInAnonymously(auth);
+  setStatus("Auth OK: " + cred.user.uid);
+} catch (e) {
+  console.error("Anonymous auth failed:", e);
+  setStatus("Auth FEL: " + (e.code || e.message));
+}
+
 
   const gameRef = doc(db, "games", GAME_DOC_ID);
+
+  const statusLine = document.getElementById("statusLine");
+function setStatus(msg){
+  console.log(msg);
+  if(statusLine) statusLine.textContent = msg;
+}
 
   // ----- State -----
   let gameState = null;
@@ -355,7 +367,7 @@ async function init() {
         confettiBurst("mega");
       }
     }
-    if (bOpened && mOpened && bCh && mCh) {
+      if (bOpened && mOpened && bCh && mCh) {
       const key2 = `${day}-both`;
       if (!fired.has(key2)) {
         fired.add(key2);
@@ -447,14 +459,25 @@ async function init() {
   });
 
   // ----- Realtime snapshot -----
-  onSnapshot(gameRef, (snap) => {
+ onSnapshot(
+  gameRef,
+  (snap) => {
+    setStatus("Snapshot OK. exists=" + snap.exists());
     gameState = snap.data() || null;
+
     updateLeaderboard();
     updateStats();
     updateMoney();
     renderBadges();
     if (currentDay) updateStatusLine(currentDay);
-  });
+  },
+  (err) => {
+    console.error("Firestore onSnapshot error:", err);
+    setStatus("Firestore FEL: " + (err.code || err.message));
+  }
+);
+
 }
 
 init().catch((err) => console.error("Init failed:", err));
+
