@@ -3,48 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Sluta snusa – Barça Edition</title>
+  <title>Sluta snusa</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <header class="header">
+    <h1>🔵🔴 Sluta snusa ⚽</h1>
+    <p>Bitti & Mattias – 60 matcher. Ett lag. / Allar</p>
 
-<header class="header">
-  <h1>🔵🔴 Sluta snusa – Barça Edition ⚽</h1>
-  <p>Bitti & Mattias – ett lag, 60 matcher. / Allar</p>
-</header>
-
-<section class="leaderboard">
-  <h2>🏆 Leaderboard</h2>
-  <div class="board">
-    <div>💙 Bitti: <span id="pointsBitti">0</span></div>
-    <div>❤️ Mattias: <span id="pointsMattias">0</span></div>
-  </div>
-</section>
-
-<main>
-  <div class="calendar"></div>
-</main>
-
-<div id="modal" class="modal hidden">
-  <div class="modal-content">
-    <button id="close" class="close-btn">&times;</button>
-
-    <p id="content"></p>
-
-    <div class="challenge">
-      <strong>🎯 Dagens utmaning:</strong>
-      <p id="challengeText"></p>
-
-      <div class="challenge-buttons">
-        <button id="bittiDone">Bitti klarade utmaningen ⭐</button>
-        <button id="mattiasDone">Mattias klarade utmaningen ⭐</button>
-      </div>
+    <div class="who">
+      Jag är:
+      <button id="iAmBitti" type="button">Bitti</button>
+      <button id="iAmMattias" type="button">Mattias</button>
+      <span id="whoChosen"></span>
     </div>
+  </header>
 
-    <a id="callAllarBtn" class="call-btn hidden" href="#">📞 Ring Allar och hämta belöningen</a>
+  <section class="leaderboard">
+    <h2>🏆 Leaderboard</h2>
+    <div class="board">
+      <div>💙 Bitti: <span id="pointsBitti">0</span></div>
+      <div>❤️ Mattias: <span id="pointsMattias">0</span></div>
+    </div>
+  </section>
+
+  <main>
+    <div class="calendar"></div>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <button id="close" class="close-btn" aria-label="Stäng">&times;</button>
+
+      <p id="content" class="modal-text"></p>
+
+      <div class="challenge">
+        <strong>🎯 Dagens utmaning</strong>
+        <p id="challengeText"></p>
+
+        <div class="challenge-buttons">
+          <button id="challengeDoneBtn" type="button">⭐ Jag klarade utmaningen</button>
+        </div>
+
+        <div class="status">
+          <div id="statusLine">Status: –</div>
+        </div>
+      </div>
+
+      <a id="callAllarBtn" class="call-btn hidden" href="#" target="_self">
+        📞 Ring Allar och hämta belöningen
+      </a>
+    </div>
   </div>
-</div>
 
-<script src="script.js"></script>
+  <!-- Kör din app-kod som module (behövs för Firebase CDN imports) -->
+  <script type="module" src="script.js"></script>
 </body>
 </html>
