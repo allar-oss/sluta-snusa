@@ -3,10 +3,10 @@ const allarPhone = "+46761953421";
 
 // ---------- Bakgrundsbildspel ----------
 const backgrounds = [
-  "images/bg1.jpg",
-  "images/bg2.jpg",
-  "images/bg3.jpg",
-  "images/bg4.jpg"
+  "imagesbg1.jpg",
+  "imagesbg2.jpg",
+  "imagesbg3.jpg",
+  "imagesbg4.jpg"
 ];
 
 let bgIndex = 0;
@@ -91,4 +91,5 @@ document.getElementById("mattiasDone").onclick = () => {
 document.getElementById("close").onclick = () => {
   document.getElementById("modal").classList.add("hidden");
 };
+
 
