@@ -27,76 +27,76 @@
       <div>❤️ Mattias: <span id="pointsMattias">0</span></div>
     </div>
   </section>
+
   <section class="stats">
-    <section class="extras">
-  <h2>💰 Sparade pengar</h2>
+    <h2>📈 Progress</h2>
 
-  <div class="moneyGrid">
-    <div class="moneyCard">
-      <div class="moneyTitle">💙 Bitti</div>
-      <div class="moneyNumber"><span id="moneyBitti">0</span> kr</div>
-      <div class="moneySmall">≈ <span id="moneyBittiDay">0</span> kr/dag</div>
-    </div>
-
-    <div class="moneyCard">
-      <div class="moneyTitle">❤️ Mattias</div>
-      <div class="moneyNumber"><span id="moneyMattias">0</span> kr</div>
-      <div class="moneySmall">≈ <span id="moneyMattiasDay">0</span> kr/dag</div>
-    </div>
-
-    <div class="moneyCard total">
-      <div class="moneyTitle">🏦 Totalt</div>
-      <div class="moneyNumber"><span id="moneyTotal">0</span> kr</div>
-      <div class="moneySmall">Ni är rika på vilja. 💪</div>
-    </div>
-  </div>
-
-  <div class="moneySettings">
-    <label>
-      Kostnad snus / dag (kr):
-      <input id="costPerDay" type="number" min="0" step="1" value="60" />
-    </label>
-
-    <label>
-      Startdatum (dag 1):
-      <input id="startDateInput" type="date" />
-    </label>
-
-    <button id="saveMoneySettings" type="button">Spara inställningar</button>
-    <div class="moneyHint">Tips: du kan justera detta när som helst. Sparas lokalt i din webbläsare.</div>
-  </div>
-
-  <h2 style="margin-top:18px;">🏅 Barça-badges</h2>
-  <div id="badgesWrap" class="badgesWrap"></div>
-</section>
-
-  <h2>📈 Progress</h2>
-
-  <div class="statGrid">
-    <div class="statCard">
-      <div class="statTitle">💙 Bitti</div>
-      <div class="statRow">
-        <div class="pill">Streak: <span id="streakBitti">0</span> 🔥</div>
-        <div class="pill">Klara dagar: <span id="doneDaysBitti">0</span>/60</div>
+    <div class="statGrid">
+      <div class="statCard">
+        <div class="statTitle">💙 Bitti</div>
+        <div class="statRow">
+          <div class="pill">Streak: <span id="streakBitti">0</span> 🔥</div>
+          <div class="pill">Klara dagar: <span id="doneDaysBitti">0</span>/60</div>
+        </div>
+        <div class="progressBar" aria-label="Bitti progress">
+          <div id="progressFillBitti" class="progressFill"></div>
+        </div>
       </div>
-      <div class="progressBar" aria-label="Bitti progress">
-        <div id="progressFillBitti" class="progressFill"></div>
+
+      <div class="statCard">
+        <div class="statTitle">❤️ Mattias</div>
+        <div class="statRow">
+          <div class="pill">Streak: <span id="streakMattias">0</span> 🔥</div>
+          <div class="pill">Klara dagar: <span id="doneDaysMattias">0</span>/60</div>
+        </div>
+        <div class="progressBar" aria-label="Mattias progress">
+          <div id="progressFillMattias" class="progressFill"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="extras">
+    <h2>💰 Sparade pengar</h2>
+
+    <div class="moneyGrid">
+      <div class="moneyCard">
+        <div class="moneyTitle">💙 Bitti</div>
+        <div class="moneyNumber"><span id="moneyBitti">0</span> kr</div>
+        <div class="moneySmall">≈ <span id="moneyBittiDay">69</span> kr/dag</div>
+      </div>
+
+      <div class="moneyCard">
+        <div class="moneyTitle">❤️ Mattias</div>
+        <div class="moneyNumber"><span id="moneyMattias">0</span> kr</div>
+        <div class="moneySmall">≈ <span id="moneyMattiasDay">69</span> kr/dag</div>
+      </div>
+
+      <div class="moneyCard total">
+        <div class="moneyTitle">🏦 Totalt</div>
+        <div class="moneyNumber"><span id="moneyTotal">0</span> kr</div>
+        <div class="moneySmall">Ni är rika på vilja. 💪</div>
       </div>
     </div>
 
-    <div class="statCard">
-      <div class="statTitle">❤️ Mattias</div>
-      <div class="statRow">
-        <div class="pill">Streak: <span id="streakMattias">0</span> 🔥</div>
-        <div class="pill">Klara dagar: <span id="doneDaysMattias">0</span>/60</div>
-      </div>
-      <div class="progressBar" aria-label="Mattias progress">
-        <div id="progressFillMattias" class="progressFill"></div>
-      </div>
-    </div>
-  </div>
-</section>
+    <div class="moneySettings">
+      <label>
+        Kostnad snus / dag (kr):
+        <input id="costPerDay" type="number" min="0" step="1" value="69" />
+      </label>
 
+      <label>
+        Startdatum (dag 1):
+        <input id="startDateInput" type="date" />
+      </label>
+
+      <button id="saveMoneySettings" type="button">Spara inställningar</button>
+      <div class="moneyHint">Tips: du kan ändra när som helst. Sparas lokalt i webbläsaren.</div>
+    </div>
+
+    <h2 style="margin-top:18px;">🏅 Barça-badges</h2>
+    <div id="badgesWrap" class="badgesWrap"></div>
+  </section>
 
   <main>
     <div class="calendar" aria-label="Kalender med 60 dagar"></div>
@@ -120,20 +120,16 @@
         </div>
 
         <div class="status">
-          <div id="statusLine">Status: –</div>
+          <div id="statusLine">Status: väntar på synk…</div>
         </div>
       </div>
 
       <a id="callAllarBtn" class="call-btn hidden" href="#" target="_self">
-        📞 Ring Allar och hämta belöningen
+        📞 Ring Allar och hämta belöningen (+2p)
       </a>
     </div>
   </div>
 
-  <!-- App-kod (Firebase imports kräver module) -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
-
-
-
