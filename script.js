@@ -1,5 +1,5 @@
-const startDate = new Date("2025-01-01");
-const allarPhone = "+46700000000";
+const startDate = new Date("2025-12-15");
+const allarPhone = "+46761953421";
 
 // ---------- Bakgrundsbildspel ----------
 const backgrounds = [
@@ -91,3 +91,4 @@ document.getElementById("mattiasDone").onclick = () => {
 document.getElementById("close").onclick = () => {
   document.getElementById("modal").classList.add("hidden");
 };
+
