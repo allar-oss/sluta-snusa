@@ -14,10 +14,16 @@ import {
    1) FYLL I DIN FIREBASE CONFIG
    (Firebase Console -> Project settings -> Your apps -> Web app)
 ========================= */
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID"
+
+  const firebaseConfig = {
+  apiKey: "AIzaSyBHOGcSZ1o4YGSVQMo6cgJATqUz51GUPt0",
+  authDomain: "sluta-snusa-add0a.firebaseapp.com",
+  projectId: "sluta-snusa-add0a",
+  storageBucket: "sluta-snusa-add0a.firebasestorage.app",
+  messagingSenderId: "1091597533744",
+  appId: "1:1091597533744:web:35226b31e0a5fbbc7663f5",
+  measurementId: "G-7C6R0LML9W"
+};
 };
 
 /* =========================
@@ -287,3 +293,4 @@ async function init() {
 init().catch((err) => {
   console.error("Init failed:", err);
 });
+
