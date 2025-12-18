@@ -27,11 +27,49 @@ const firebaseConfig = {
    2) SETTINGS
 ========================= */
 const GAME_DOC_ID = "sluta-snusa";     // games/sluta-snusa
-const ALLAR_PHONE = "+46700000000";    // byt till ditt nummer
+const ALLAR_PHONE = "+46761953421";    // byt till ditt nummer
 const TOTAL_DAYS = 60;
 
 // Dag 1 blir öppen direkt
-const startDate = new Date(localStorage.getItem("gameStartISO") || new Date().toISOString().slice(0,10));
+// Sätt ett fast startdatum som sparas i localStorage första gången
+const START_KEY = "gameStartISO";
+
+function getStartDateISO(){
+  let iso = localStorage.getItem(START_KEY);
+  if(!iso){
+    iso = "2025-12-15"; // 🔒 FAST STARTDATUM (Dag 1)
+    localStorage.setItem(START_KEY, iso);
+  }
+  return iso;
+}
+
+function parseISODate(iso){
+  const [y,m,d] = iso.split("-").map(Number);
+  return new Date(y, m-1, d); // lokal midnatt
+}
+
+const startDate = parseISODate(getStartDateISO());
+
+function daysSinceStart(){
+  const today = new Date();
+  const todayMid = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
+
+  const diffMs = todayMid - startDate;
+  const daysPassed = Math.floor(diffMs / 86400000);
+
+  // Dag 1 på startdatumet, dag 4 den 18:e
+  return Math.max(1, daysPassed + 1);
+}
+
+function isLocked(dayNumber){
+  const unlockedUpTo = Math.min(TOTAL_DAYS, daysSinceStart());
+  return dayNumber > unlockedUpTo;
+}
+
 
 // Bakgrunder ligger i /images/
 const backgrounds = ["images/bg1.jpg","images/bg2.jpg","images/bg3.jpg","images/bg4.jpg"];
@@ -506,5 +544,6 @@ async function init() {
 }
 
 init().catch((err) => console.error("Init failed:", err));
+
 
 
