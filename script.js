@@ -31,7 +31,8 @@ const ALLAR_PHONE = "+46700000000";    // byt till ditt nummer
 const TOTAL_DAYS = 60;
 
 // Dag 1 blir öppen direkt
-const startDate = new Date();
+const startDate = new Date(localStorage.getItem("gameStartISO") || new Date().toISOString().slice(0,10));
+;
 
 // Bakgrunder ligger i /images/
 const backgrounds = ["images/bg1.jpg","images/bg2.jpg","images/bg3.jpg","images/bg4.jpg"];
@@ -506,3 +507,4 @@ async function init() {
 }
 
 init().catch((err) => console.error("Init failed:", err));
+
