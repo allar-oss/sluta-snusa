@@ -32,36 +32,19 @@ const TOTAL_DAYS = 60;
 
 // Dag 1 blir öppen direkt
 // Sätt ett fast startdatum som sparas i localStorage första gången
-const START_KEY = "gameStartISO";
-
-function getStartDateISO(){
-  let iso = localStorage.getItem(START_KEY);
-  if(!iso){
-    iso = "2025-12-15"; // 🔒 FAST STARTDATUM (Dag 1)
-    localStorage.setItem(START_KEY, iso);
-  }
-  return iso;
-}
-
-function parseISODate(iso){
-  const [y,m,d] = iso.split("-").map(Number);
-  return new Date(y, m-1, d); // lokal midnatt
-}
-
-const startDate = parseISODate(getStartDateISO());
+// ===== FAST STARTDATUM FÖR ALLA =====
+// Dag 1 = 2025-12-15
+const startDate = new Date(2025, 11, 15); // 11 = december (månader är 0-index)
 
 function daysSinceStart(){
   const today = new Date();
-  const todayMid = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate()
-  );
+  const todayMid = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-  const diffMs = todayMid - startDate;
+  const startMid = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+  const diffMs = todayMid - startMid;
   const daysPassed = Math.floor(diffMs / 86400000);
 
-  // Dag 1 på startdatumet, dag 4 den 18:e
+  // 15:e => dag 1, 18:e => dag 4
   return Math.max(1, daysPassed + 1);
 }
 
@@ -69,7 +52,6 @@ function isLocked(dayNumber){
   const unlockedUpTo = Math.min(TOTAL_DAYS, daysSinceStart());
   return dayNumber > unlockedUpTo;
 }
-
 
 // Bakgrunder ligger i /images/
 const backgrounds = ["images/bg1.jpg","images/bg2.jpg","images/bg3.jpg","images/bg4.jpg"];
@@ -544,6 +526,7 @@ async function init() {
 }
 
 init().catch((err) => console.error("Init failed:", err));
+
 
 
 
