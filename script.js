@@ -77,11 +77,7 @@ function $(sel) {
   if (!el) console.warn("Missing element:", sel);
   return el;
 }
-function isLocked(dayNumber) {
-  const d = new Date(startDate);
-  d.setDate(startDate.getDate() + (dayNumber - 1));
-  return new Date() < d;
-}
+
 
 /* ===== Confetti ===== */
 function confettiBurst(intensity = "normal") {
@@ -526,6 +522,7 @@ async function init() {
 }
 
 init().catch((err) => console.error("Init failed:", err));
+
 
 
 
